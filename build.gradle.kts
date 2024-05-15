@@ -62,5 +62,82 @@ tasks.register("readJSONFile") {
     }
 }
 
-
 tasks.getByName("readJSONFile") { dependsOn("sleepTask") }
+
+// can run in parallel like: ./gradlew longRunningTask1 longRunningTask2 longRunningTask3 longRunningTask4
+tasks.register("longRunningTask1") {
+    doLast {
+        logger.info("longRunningTask1 sleeping")
+        Thread.sleep(20000)
+        logger.info("longRunningTask1 finished sleeping")
+    }
+}
+
+tasks.register("longRunningTask2") {
+    doLast {
+        logger.info("longRunningTask2 sleeping")
+        Thread.sleep(1000)
+        logger.info("longRunningTask2 finished sleeping")
+    }
+}
+
+tasks.register("longRunningTask3") {
+    doLast {
+        logger.info("longRunningTask3 sleeping")
+        Thread.sleep(15000)
+        logger.info("longRunningTask3 finished sleeping")
+    }
+}
+
+tasks.register("longRunningTask4") {
+    doLast {
+        logger.info("longRunningTask3 sleeping")
+        Thread.sleep(3000)
+        logger.info("longRunningTask3 finished sleeping")
+    }
+}
+
+
+tasks.register("requiresLongRunningTasks") {
+    dependsOn("longRunningTask1", "longRunningTask2", "longRunningTask3", "longRunningTask4")
+}
+
+fun fibonacci(n: Int): Int {
+    return when (n) {
+        0 -> 0
+        1 -> 1
+        else -> fibonacci(n - 1) + fibonacci(n - 2)
+    }
+}
+
+// takes 3 seconds to run in my machine using the jdk, and 10 seconds to run with python3
+tasks.register("fibonacciTask") {
+    doLast {
+        logger.info("fibonacciTask started")
+        val result = fibonacci(40)
+        logger.info("fibonacciTask result: $result")
+    }
+}
+
+tasks.register("fibonacciTask45") {
+    doLast {
+        logger.info("fibonacciTask started")
+        val result = fibonacci(45)
+        logger.info("fibonacciTask result: $result")
+    }
+}
+
+
+tasks.register("fibonacciTaskCached") {
+    inputs.property("number", 45)
+    val outputFile = File(project.layout.buildDirectory.get().asFile, "fibonacciTask100.txt")
+    outputs.file(outputFile)
+    doLast {
+        logger.info("fibonacciTask started")
+        val result = fibonacci(45)
+        outputFile.writeText(result.toString())
+        logger.info("fibonacciTask result: $result")
+    }
+}
+
+// run task in docker container
